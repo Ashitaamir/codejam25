@@ -31,6 +31,24 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
   const [dragStart, setDragStart] = React.useState<{ x: number; y: number } | null>(null);
   const [dragOffset, setDragOffset] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [velocity, setVelocity] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isSwiping, setIsSwiping] = React.useState<boolean>(false); // Prevent double swipes
+  
+  // Track previous cardsData length to detect when cards are filtered out
+  const prevCardsLengthRef = React.useRef<number>(cardsData.length);
+  
+  // Reset currentIndex to 0 when cards are filtered out (swiped)
+  React.useEffect(() => {
+    // If cards were removed (filtered), reset index to 0 to show the next card
+    if (cardsData.length < prevCardsLengthRef.current && cardsData.length > 0) {
+      setCurrentIndex(0);
+    }
+    prevCardsLengthRef.current = cardsData.length;
+    
+    // If no cards left, show done popup
+    if (cardsData.length === 0) {
+      setShowDonePopup(true);
+    }
+  }, [cardsData.length]);
 
   const tinderContainerRef = React.useRef<HTMLDivElement>(null);
   const cardsRef = React.useRef<(HTMLDivElement | null)[]>([]);
@@ -62,19 +80,25 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
   }, [currentIndex, getCardStyles, cardsData.length]);
 
   const updateCards = React.useCallback(() => {
-    if (currentIndex < cardsData.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setDragOffset({ x: 0, y: 0 });
-      setIsDragging(false);
-    } else {
+    // Don't increment index - the card will be filtered out and next card becomes index 0
+    // Just reset drag state
+    setDragOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+    
+    // The useEffect will handle resetting currentIndex when cards are filtered
+    // If no cards left, show done popup
+    if (cardsData.length <= 1) {
       setShowDonePopup(true);
     }
-  }, [currentIndex, cardsData.length]);
+  }, [cardsData.length]);
 
   const handleButtonClick = React.useCallback(
     (love: boolean) => () => {
       const topCard = cardsRef.current[0];
-      if (!topCard || !tinderContainerRef.current) return;
+      if (!topCard || !tinderContainerRef.current || isSwiping) return;
+
+      // Prevent double swipes
+      setIsSwiping(true);
 
       // Get the current card being swiped
       const currentCard = cardsData[currentIndex];
@@ -94,9 +118,10 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
 
       setTimeout(() => {
         updateCards();
-      }, 150);
+        setIsSwiping(false);
+      }, 300);
     },
-    [updateCards, currentIndex, cardsData, onSwipe]
+    [updateCards, currentIndex, cardsData, onSwipe, isSwiping]
   );
 
   const handleTouchStart = React.useCallback(
@@ -146,7 +171,7 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
   }, [dragStart]);
 
   const handleTouchEnd = React.useCallback(() => {
-    if (!dragStart) return;
+    if (!dragStart || isSwiping) return;
 
     const topCard = cardsRef.current[0];
     if (!topCard) {
@@ -159,6 +184,9 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
     const keep = Math.abs(dragOffset.x) < 80 || Math.abs(velocity.x) < 0.5;
 
     if (!keep) {
+      // Prevent double swipes
+      setIsSwiping(true);
+
       // Determine swipe direction
       const swipeDirection = dragOffset.x > 0 ? 'right' : 'left';
       const currentCard = cardsData[currentIndex];
@@ -174,7 +202,8 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
       topCard.style.transform = `translate(${toX}px, 0) rotate(${(dragOffset.x > 0 ? 1 : -1) * 15}deg)`;
       setTimeout(() => {
         updateCards();
-      }, 50);
+        setIsSwiping(false);
+      }, 300);
     } else {
       topCard.style.transition = "transform 0.3s ease";
       topCard.style.transform = "";
@@ -184,7 +213,7 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
     setDragStart(null);
     setDragOffset({ x: 0, y: 0 });
     setVelocity({ x: 0, y: 0 });
-  }, [dragStart, dragOffset, velocity, updateCards, currentIndex, cardsData, onSwipe]);
+  }, [dragStart, dragOffset, velocity, updateCards, currentIndex, cardsData, onSwipe, isSwiping]);
 
   const handleMouseDown = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -231,7 +260,7 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
   );
 
   const handleMouseUp = React.useCallback(() => {
-    if (!dragStart || !isDragging) return;
+    if (!dragStart || !isDragging || isSwiping) return;
 
     const topCard = cardsRef.current[0];
     if (!topCard) {
@@ -244,6 +273,9 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
     const keep = Math.abs(dragOffset.x) < 80 || Math.abs(velocity.x) < 0.5;
 
     if (!keep) {
+      // Prevent double swipes
+      setIsSwiping(true);
+
       // Determine swipe direction
       const swipeDirection = dragOffset.x > 0 ? 'right' : 'left';
       const currentCard = cardsData[currentIndex];
@@ -259,7 +291,8 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
       topCard.style.transform = `translate(${toX}px, 0) rotate(${(dragOffset.x > 0 ? 1 : -1) * 15}deg)`;
       setTimeout(() => {
         updateCards();
-      }, 50);
+        setIsSwiping(false);
+      }, 300);
     } else {
       topCard.style.transition = "transform 0.3s ease";
       topCard.style.transform = "";
@@ -269,7 +302,7 @@ export function TinderCards({ cardsData, onSwipe, getRankings }: TinderCardsProp
     setDragStart(null);
     setDragOffset({ x: 0, y: 0 });
     setVelocity({ x: 0, y: 0 });
-  }, [dragStart, isDragging, dragOffset, velocity, updateCards, currentIndex, cardsData, onSwipe]);
+  }, [dragStart, isDragging, dragOffset, velocity, updateCards, currentIndex, cardsData, onSwipe, isSwiping]);
 
   React.useEffect(() => {
     updateCardStyles();
