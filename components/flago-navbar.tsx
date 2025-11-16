@@ -9,19 +9,16 @@ export default function FlagoNavbar() {
   const pathname = usePathname();
   
   const navItems = [
-    { name: "Platform", link: "/platform" },
-    { name: "Use cases", link: "/use-cases" },
-    { name: "Learning", link: "/learning" },
-    { name: "Pricing", link: "/pricing" },
-    { name: "Enterprise", link: "/enterprise" },
-    { name: "Company", link: "/company" },
+    { name: "Home", link: "/home" },
+    { name: "About", link: "/about" },
+    { name: "Contact Us", link: "/contact_us" },
   ];
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // Check if a link is active (for demo, we'll highlight "Use cases" or match pathname)
+  // Check if a link is active
   const isActive = (link: string) => {
-    return pathname === link || (link === "/use-cases" && pathname === "/home");
+    return pathname === link;
   };
 
   return (
@@ -30,16 +27,18 @@ export default function FlagoNavbar() {
       <div className="hidden lg:flex items-center justify-center py-4 px-6">
         {/* Gradient Border Wrapper */}
         <div 
-          className="rounded-full p-[2px]"
+          className="rounded-full p-[2px] w-full"
           style={{
             background: 'linear-gradient(to right, #60a5fa, #34d399)',
+            maxWidth: '95%',
+            minWidth: '1200px',
           }}
         >
           <div className="
-            relative w-full max-w-7xl
+            relative w-full
             flex items-center justify-between
             bg-white rounded-full
-            px-8 py-4
+            px-12 py-4
           ">
           {/* Left Section - Logo */}
           <div className="flex items-center space-x-4">
@@ -73,7 +72,7 @@ export default function FlagoNavbar() {
           </div>
 
           {/* Center Section - Navigation Links */}
-          <div className="flex items-center space-x-6 absolute left-1/2 transform -translate-x-1/2">
+          <div className="flex items-center space-x-10 absolute left-1/2 transform -translate-x-1/2">
             {navItems.map((item, idx) => {
               const active = isActive(item.link);
               return (
@@ -105,25 +104,8 @@ export default function FlagoNavbar() {
             })}
           </div>
 
-          {/* Right Section - Action Buttons */}
-          <div className="flex items-center gap-3">
-            {/* Login Button */}
-            <Link
-              href="/login"
-              className="
-                px-5 py-2.5
-                rounded-lg
-                bg-sky-200 hover:bg-sky-300
-                text-gray-900
-                text-sm font-medium
-                transition-colors
-                shadow-sm
-              "
-            >
-              Login
-            </Link>
-            
-            {/* Sign up Button */}
+          {/* Right Section - Get Started Button */}
+          <div className="flex items-center">
             <Link
               href="/form"
               className="
@@ -136,7 +118,7 @@ export default function FlagoNavbar() {
                 transition-colors
               "
             >
-              Sign up
+              Get Started
               <svg 
                 className="w-4 h-4" 
                 fill="none" 
@@ -203,32 +185,21 @@ export default function FlagoNavbar() {
                 {item.name}
               </Link>
             ))}
-            <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
-              <Link
-                href="/login"
-                className="
-                  px-5 py-2.5
-                  rounded-lg
-                  bg-sky-200
-                  text-gray-900
-                  text-sm font-medium
-                  text-center
-                "
-              >
-                Login
-              </Link>
+            <div className="pt-4 border-t border-gray-200">
               <Link
                 href="/form"
                 className="
                   inline-flex items-center justify-center gap-2
+                  w-full
                   px-5 py-2.5
                   rounded-lg
                   bg-black
                   text-white
                   text-sm font-medium
                 "
+                onClick={() => setIsMobileMenuOpen(false)}
               >
-                Sign up
+                Get Started
                 <svg 
                   className="w-4 h-4" 
                   fill="none" 
